@@ -1,0 +1,50 @@
+# Run a build step in a container or directly on the Actions runner
+name: Download or Build Container
+description: Download a container from the package registry, or build it if it's not found
+
+inputs:
+  container:
+    description: Container name
+    type: string
+    required: true
+  dockerfile:
+    description: Dockerfile
+    type: string
+  base:
+    description: Container base
+    type: string
+  registry:
+    description: Docker registry to read and publish to
+    type: string
+    default: ghcr.io
+  config-path:
+    description: Path to Dockerfiles
+    type: string
+  github_token:
+    description: GitHub Token
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+  - name: Download container
+    run: |
+      containerinfo.sh "${{ inputs.container }}" "${{ inputs.dockerfile }}"
+    env:
+      DOCKER_REGISTRY: ${{ inputs.registry }}
+      GITHUB_TOKEN: ${{ inputs.github_token }}
+    working-directory: ${{ inputs.config-path }}
+  - name: Create container
+    run: |
+      if [ "${{ inputs.base }}" != "" ]; then
+        BASE_ARG="--build-arg BASE=${{ inputs.base }}"
+      fi
+      docker build -t ${{ env.docker-registry-container-sha }} --build-arg UID=$(id -u) --build-arg GID=$(id -g) ${BASE_ARG} -f ${{ env.dockerfile }} .
+      docker tag ${{ env.docker-registry-container-sha }} ${{ env.docker-registry-container-latest }}
+    working-directory: ${{ inputs.config-path }}
+    if: env.docker-container-exists != 'true'
+  - name: Publish container
+    run: |
+      docker push ${{ env.docker-registry-container-sha }}
+      docker push ${{ env.docker-registry-container-latest }}
+    if: env.docker-container-exists != 'true' && github.event_name != 'pull_request'
