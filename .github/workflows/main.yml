@@ -266,7 +266,6 @@ jobs:
   # published to our documentation site.
   documentation:
     name: Generate documentation
-    needs: [ containers ]
     if: success() || failure()
     runs-on: ubuntu-latest
     steps:
@@ -275,6 +274,13 @@ jobs:
       with:
         path: source
         fetch-depth: 0
+    - name: Set up container
+      uses: ./source/.github/actions/download-or-build-container
+      with:
+        registry: ${{ env.docker-registry }}
+        config-path: ${{ env.docker-config-path }}
+        container: docurium
+        github_token: ${{ secrets.github_token }}
     - name: Generate documentation
       working-directory: source
       run: |
