@@ -34,7 +34,6 @@ runs:
     env:
       DOCKER_REGISTRY: ${{ inputs.registry }}
       GITHUB_TOKEN: ${{ inputs.github_token }}
-    working-directory: ${{ inputs.config-path }}
   - name: Create container
     run: |
       if [ "${{ inputs.base }}" != "" ]; then
