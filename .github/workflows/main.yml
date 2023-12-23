@@ -22,7 +22,6 @@ jobs:
   # and their details.  Then we build either in a docker container (Linux)
   # or on the actual hosts (macOS, Windows).
   build:
-    needs: [ containers ]
     strategy:
       matrix:
         platform:
