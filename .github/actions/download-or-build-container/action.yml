@@ -30,6 +30,7 @@ runs:
   - name: Download container
     run: |
       containerinfo.sh "${{ inputs.container }}" "${{ inputs.dockerfile }}"
+    shell: bash
     env:
       DOCKER_REGISTRY: ${{ inputs.registry }}
       GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -41,10 +42,12 @@ runs:
       fi
       docker build -t ${{ env.docker-registry-container-sha }} --build-arg UID=$(id -u) --build-arg GID=$(id -g) ${BASE_ARG} -f ${{ env.dockerfile }} .
       docker tag ${{ env.docker-registry-container-sha }} ${{ env.docker-registry-container-latest }}
+    shell: bash
     working-directory: ${{ inputs.config-path }}
     if: env.docker-container-exists != 'true'
   - name: Publish container
     run: |
       docker push ${{ env.docker-registry-container-sha }}
       docker push ${{ env.docker-registry-container-latest }}
+    shell: bash
     if: env.docker-container-exists != 'true' && github.event_name != 'pull_request'
